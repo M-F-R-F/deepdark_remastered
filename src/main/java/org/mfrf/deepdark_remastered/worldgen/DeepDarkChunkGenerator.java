@@ -7,7 +7,6 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.level.WorldGenRegion;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.*;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
@@ -108,10 +107,10 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
                     }
 
                     if (dy >= 253) {
-                        state = BlockStates.BEDROCK;
+                        state = Blocks.BEDROCK.defaultBlockState();
                     }
-
-                    chunkprimer.setBlockState(dx, dy, dz, state);
+                    BlockPos pos = new BlockPos(dx,dy,dz);
+                    chunkprimer.setBlockState(pos, state,false);
 
                     boolean advance;
                     switch (curState) {
@@ -143,28 +142,29 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
                 }
             }
         }
-
+/*
         for (MapGenBase generator : generators) {
             generator.generate(world, x, z, chunkprimer);
         }
 
         for (MapGenBase mapgenbase : this.structureGenerators) {
-            mapgenbase.generate(this.world, x, z, chunkprimer);
+            mapgenbase.generate(world, x, z, chunkprimer);
         }
 
         for (int dx = 0; dx < 16; ++dx) {
             for (int dz = 0; dz < 16; ++dz) {
                 for (int dy = minY; dy < minY + 3; dy++) {
-                    if (chunkprimer.getBlockState(dx, dy, dz) == BlockStates.STONE) {
-                        chunkprimer.setBlockState(dx, dy, dz, BlockStates.COBBLESTONE);
+                    BlockPos pos = new BlockPos(dx,dy,dz);
+                    if (chunkprimer.getBlockState(pos) == Blocks.STONE.defaultBlockState()) {
+                        chunkprimer.setBlockState(pos, Blocks.COBBLESTONE.defaultBlockState(),false);
                     }
                 }
             }
         }
 
-        Chunk chunk = new Chunk(this.world, chunkprimer, x, z);
+        ChunkGenerator chunk = new ChunkAccess(new ChunkPos(x,z),world, chunkprimer, x, z);
 
-        biomes = this.world.getBiomeProvider().getBiomesForGeneration(biomes, x * 16, z * 16, 16, 16);
+        biomeSource = world.getBiomeManager().getNoiseBiomeAtPosition(16, x * 16, z * 16);
         byte[] biomeIDs = chunk.getBiomeArray();
 
         for (int l = 0; l < biomeIDs.length; ++l) {
@@ -172,7 +172,8 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
         }
 
         chunk.generateSkylightMap();
-        return chunk;
+
+ */
     }
 
 

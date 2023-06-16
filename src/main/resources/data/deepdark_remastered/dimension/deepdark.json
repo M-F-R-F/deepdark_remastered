@@ -1,0 +1,11 @@
+{
+  "type": "darkworld_remastered:deepdark",
+  "generator": {
+    "type": "darkworld_remastered:deepdark_chunkgen",
+    "settings": {
+      "sea_level": 65,
+      "celling": 256,
+      "floor": 0
+    }
+  }
+}

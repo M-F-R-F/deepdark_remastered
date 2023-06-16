@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "org.mfrf.deepdark_remastered.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "deepdark_remastered.refmap.json",
+  "mixins": [
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

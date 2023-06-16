@@ -4,7 +4,7 @@
     "type": "deepdark_remastered:deepdark_chunkgen",
     "settings": {
       "sea_level": 0,
-      "celling": 4000,
+      "celling": 2000,
       "floor": -2000
     }
   }

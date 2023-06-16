@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
+import net.minecraft.gametest.framework.GameTestRegistry;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.WorldGenRegion;
@@ -72,109 +73,6 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
 
     @Override
     public void buildSurface(WorldGenRegion world, StructureManager structureManager, RandomState randomState, ChunkAccess chunkprimer) {
-        int x = chunkprimer.getPos().x;
-        int z = chunkprimer.getPos().z;
-        int minY = settings.floor;
-        int maxY = settings.celling;
-        Random random = new Random((x >> 2) * 65535 + (z >> 2));
-
-        int spire_x = ((x >> 2) * 64) + (8 + random.nextInt(48)) - (x * 16);
-        int spire_z = ((z >> 2) * 64) + (8 + random.nextInt(48)) - (z * 16);
-
-        random.setSeed((long) x * 341873128712L + (long) z * 132897987541L);
-        GenStates[] values = GenStates.values();
-        for (int dx = 0; dx < 16; ++dx) {
-            for (int dz = 0; dz < 16; ++dz) {
-                int rs = (spire_x - dx) * (spire_x - dx) + (spire_z - dz) * (spire_z - dz);
-
-                double spire_dist = rs < convertHeight(256) ? Math.sqrt(rs) : Double.MAX_VALUE;
-
-                GenStates curState = GenStates.FLOOR_BEDROCK;
-                for (int dy = 0; dy < convertHeight(256); dy++) {
-                    BlockState state = curState.state;
-
-                    if (curState == GenStates.AIR) {
-                        if (rs < convertHeight(256)) {
-                            int m = Math.min(dy - minY, maxY - dy);
-                            double t = spire_dist;
-
-                            if (m < convertHeight(9)) {
-                                t -= Math.sqrt(convertHeight(9) - m);
-                            }
-
-                            if (t <= 4 || t <= 5 && random.nextBoolean()) {
-                                state = Blocks.COBBLESTONE.defaultBlockState();
-                            }
-                        }
-                    }
-
-                    if (dy >= convertHeight(253)) {
-                        state = Blocks.BEDROCK.defaultBlockState();
-                    }
-                    BlockPos pos = new BlockPos(dx, dy, dz);
-                    chunkprimer.setBlockState(pos, state, true);
-
-                    boolean advance;
-                    switch (curState) {
-                        case FLOOR_BEDROCK:
-                            advance = dy > convertHeight(2) || dy > convertHeight(0) && random.nextBoolean();
-                            break;
-                        case GROUND:
-                            advance = dy >= (minY + convertHeight(2)) || dy >= minY && random.nextInt(4) != 0;
-                            break;
-                        case AIR:
-                            advance = dy >= convertHeight(90) && (dy >= maxY || random.nextInt(1 + 2 * (maxY - dy) * (maxY - dy)) == 0);
-                            break;
-                        case CEILING:
-                            advance = dy >= maxY && random.nextInt(40) == 0;
-                            break;
-                        case CEILING_STONE:
-                            advance = dy >= convertHeight(253);
-
-                            break;
-                        case CEILING_BEDROCK:
-                            advance = false;
-                            break;
-                        default:
-                            throw new RuntimeException("Invalid State " + curState);
-                    }
-                    if (advance) {
-                        curState = values[curState.ordinal() + 1];
-                    }
-                }
-            }
-        }
-//
-//        for (MapGenBase generator : generators) {
-//            generator.generate(world, x, z, chunkprimer);
-//        }
-//
-//        for (MapGenBase mapgenbase : this.structureGenerators) {
-//            mapgenbase.generate(world, x, z, chunkprimer);
-//        }
-//
-        for (int dx = 0; dx < 16; ++dx) {
-            for (int dz = 0; dz < 16; ++dz) {
-                for (int dy = minY; dy < minY + 3; dy++) {
-                    BlockPos pos = new BlockPos(dx, dy, dz);
-                    if (chunkprimer.getBlockState(pos) == Blocks.STONE.defaultBlockState()) {
-                        chunkprimer.setBlockState(pos, Blocks.COBBLESTONE.defaultBlockState(), false);
-                    }
-                }
-            }
-        }
-//
-//        ChunkGenerator chunk = new ChunkAccess(new ChunkPos(x,z),world, chunkprimer, x, z);
-//
-//        biomeSource = world.getBiomeManager().getNoiseBiomeAtPosition(16, x * 16, z * 16);
-//        byte[] biomeIDs = chunk.getBiomeArray();
-//
-//        for (int l = 0; l < biomeIDs.length; ++l) {
-//            biomeIDs[l] = (byte) Biome.getIdForBiome(biomes[l]);
-//        }
-//
-//        chunk.generateSkylightMap();
-//
 
     }
 
@@ -188,8 +86,9 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
     public CompletableFuture<ChunkAccess> fillFromNoise(Executor executor, Blender blender, RandomState randomState, StructureManager structureManager, ChunkAccess chunkprimer) {
         int x = chunkprimer.getPos().x;
         int z = chunkprimer.getPos().z;
-        int minY = settings.floor;
+        int seaLevel = settings.seaLevel;
         int maxY = settings.celling;
+        int cellingHeight = convertHeight(230);
         Random random = new Random((x >> 2) * 65535 + (z >> 2));
 
         int spire_x = ((x >> 2) * 64) + (8 + random.nextInt(48)) - (x * 16);
@@ -204,12 +103,12 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
                 double spire_dist = rs < convertHeight(256) ? Math.sqrt(rs) : Double.MAX_VALUE;
 
                 GenStates curState = GenStates.FLOOR_BEDROCK;
-                for (int dy = 0; dy < convertHeight(256); dy++) {
+                for (int dy = getMinY(); dy < convertHeight(256); dy++) {
                     BlockState state = curState.state;
 
                     if (curState == GenStates.AIR) {
                         if (rs < convertHeight(256)) {
-                            int m = Math.min(dy - minY, maxY - dy);
+                            int m = Math.min(dy - seaLevel, maxY - dy);
                             double t = spire_dist;
 
                             if (m < convertHeight(9)) {
@@ -228,30 +127,18 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
                     BlockPos pos = new BlockPos(dx, dy, dz);
                     chunkprimer.setBlockState(pos, state, true);
 
-                    boolean advance;
-                    switch (curState) {
-                        case FLOOR_BEDROCK:
-                            advance = dy > convertHeight(2) || dy > convertHeight(0) && random.nextBoolean();
-                            break;
-                        case GROUND:
-                            advance = dy >= (minY + convertHeight(2)) || dy >= minY && random.nextInt(4) != 0;
-                            break;
-                        case AIR:
-                            advance = dy >= getSeaLevel() && (dy >= maxY || random.nextInt(1 + 2 * (maxY - dy) * (maxY - dy)) == 0);
-                            break;
-                        case CEILING:
-                            advance = dy >= maxY && random.nextInt(40) == 0;
-                            break;
-                        case CEILING_STONE:
-                            advance = dy >= convertHeight(253);
-
-                            break;
-                        case CEILING_BEDROCK:
-                            advance = false;
-                            break;
-                        default:
-                            throw new RuntimeException("Invalid State " + curState);
-                    }
+                    boolean advance = switch (curState) {
+                        case FLOOR_BEDROCK ->
+                                dy > getMinY() + convertHeight(2) || dy > convertHeight(0) && random.nextBoolean();
+                        case GROUND ->
+                                dy >= (getSeaLevel() + Math.abs(convertHeight(2))) || (dy - seaLevel < 30 && random.nextInt(4) != 0);
+                        case AIR ->
+                                dy >= cellingHeight - 30 && random.nextInt(1 + 2 * (cellingHeight - dy) * (cellingHeight - dy)) == 0;
+                        case CEILING -> dy >= convertHeight(247) && random.nextInt(40) == 0;
+                        case CEILING_STONE -> dy >= convertHeight(255);
+                        case CEILING_BEDROCK -> false;
+                        default -> throw new RuntimeException("Invalid State " + curState);
+                    };
                     if (advance) {
                         curState = values[curState.ordinal() + 1];
                     }
@@ -269,7 +156,7 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
 //
         for (int dx = 0; dx < 16; ++dx) {
             for (int dz = 0; dz < 16; ++dz) {
-                for (int dy = minY; dy < minY + 3; dy++) {
+                for (int dy = getSeaLevel(); dy < seaLevel + Math.abs(convertHeight(3)); dy++) {
                     BlockPos pos = new BlockPos(dx, dy, dz);
                     if (chunkprimer.getBlockState(pos) == Blocks.STONE.defaultBlockState()) {
                         chunkprimer.setBlockState(pos, Blocks.COBBLESTONE.defaultBlockState(), false);
@@ -302,7 +189,7 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
     // Make sure this is correctly implemented so that structures and features can use this
     @Override
     public NoiseColumn getBaseColumn(int x, int z, LevelHeightAccessor levelHeightAccessor, RandomState randomState) {
-        int y = getGenDepth();
+        int y = getGroundHeight();
         BlockState stone = Blocks.STONE.defaultBlockState();
         BlockState[] states = new BlockState[y];
         states[0] = Blocks.BEDROCK.defaultBlockState();
@@ -317,7 +204,7 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
     }
 
     private int convertHeight(int in) {
-        return (int) (getGenDepth() * (in / 256.0) - (settings.seaLevel - settings.floor));
+        return (int) (getGenDepth() * (in / 256.0) - getGroundHeight());
     }
 
 
@@ -337,7 +224,7 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
 
     @Override
     public int getMinY() {
-        return settings.celling;
+        return settings.floor;
     }
 
     @Override
@@ -348,6 +235,10 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
     @Override
     public int getSeaLevel() {
         return settings.seaLevel;
+    }
+
+    public int getGroundHeight() {
+        return getSeaLevel() - getMinY();
     }
 
     private record Settings(int seaLevel, int celling, int floor) {

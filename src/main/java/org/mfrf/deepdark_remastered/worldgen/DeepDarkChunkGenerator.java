@@ -1,5 +1,6 @@
 package org.mfrf.deepdark_remastered.worldgen;
 
+import com.google.errorprone.annotations.InlineMe;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.client.Minecraft;
@@ -71,12 +72,11 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
 
     @Override
     public void buildSurface(WorldGenRegion world, StructureManager structureManager, RandomState randomState, ChunkAccess chunkprimer) {
-
         int x = chunkprimer.getPos().x;
         int z = chunkprimer.getPos().z;
         int minY = settings.floor;
         int maxY = settings.celling;
-        Random random = new Random(world.getSeed() + (x >> 2) * 65535 + (z >> 2));
+        Random random = new Random((x >> 2) * 65535 + (z >> 2));
 
         int spire_x = ((x >> 2) * 64) + (8 + random.nextInt(48)) - (x * 16);
         int spire_z = ((z >> 2) * 64) + (8 + random.nextInt(48)) - (z * 16);
@@ -87,19 +87,19 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
             for (int dz = 0; dz < 16; ++dz) {
                 int rs = (spire_x - dx) * (spire_x - dx) + (spire_z - dz) * (spire_z - dz);
 
-                double spire_dist = rs < 256 ? Math.sqrt(rs) : Double.MAX_VALUE;
+                double spire_dist = rs < convertHeight(256) ? Math.sqrt(rs) : Double.MAX_VALUE;
 
                 GenStates curState = GenStates.FLOOR_BEDROCK;
-                for (int dy = 0; dy < 256; dy++) {
+                for (int dy = 0; dy < convertHeight(256); dy++) {
                     BlockState state = curState.state;
 
                     if (curState == GenStates.AIR) {
-                        if (rs < 256) {
+                        if (rs < convertHeight(256)) {
                             int m = Math.min(dy - minY, maxY - dy);
                             double t = spire_dist;
 
-                            if (m < 9) {
-                                t -= Math.sqrt(9 - m);
+                            if (m < convertHeight(9)) {
+                                t -= Math.sqrt(convertHeight(9) - m);
                             }
 
                             if (t <= 4 || t <= 5 && random.nextBoolean()) {
@@ -108,28 +108,28 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
                         }
                     }
 
-                    if (dy >= 253) {
+                    if (dy >= convertHeight(253)) {
                         state = Blocks.BEDROCK.defaultBlockState();
                     }
-                    BlockPos pos = new BlockPos(dx,dy,dz);
-                    chunkprimer.setBlockState(pos, state,false);
+                    BlockPos pos = new BlockPos(dx, dy, dz);
+                    chunkprimer.setBlockState(pos, state, true);
 
                     boolean advance;
                     switch (curState) {
                         case FLOOR_BEDROCK:
-                            advance = dy > 2 || dy > 0 && random.nextBoolean();
+                            advance = dy > convertHeight(2) || dy > convertHeight(0) && random.nextBoolean();
                             break;
                         case GROUND:
-                            advance = dy >= (minY + 2) || dy >= minY && random.nextInt(4) != 0;
+                            advance = dy >= (minY + convertHeight(2)) || dy >= minY && random.nextInt(4) != 0;
                             break;
                         case AIR:
-                            advance = dy >= 90 && (dy >= maxY || random.nextInt(1 + 2 * (maxY - dy) * (maxY - dy)) == 0);
+                            advance = dy >= convertHeight(90) && (dy >= maxY || random.nextInt(1 + 2 * (maxY - dy) * (maxY - dy)) == 0);
                             break;
                         case CEILING:
                             advance = dy >= maxY && random.nextInt(40) == 0;
                             break;
                         case CEILING_STONE:
-                            advance = dy >= 253;
+                            advance = dy >= convertHeight(253);
 
                             break;
                         case CEILING_BEDROCK:
@@ -144,38 +144,38 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
                 }
             }
         }
-/*
-        for (MapGenBase generator : generators) {
-            generator.generate(world, x, z, chunkprimer);
-        }
-
-        for (MapGenBase mapgenbase : this.structureGenerators) {
-            mapgenbase.generate(world, x, z, chunkprimer);
-        }
-
+//
+//        for (MapGenBase generator : generators) {
+//            generator.generate(world, x, z, chunkprimer);
+//        }
+//
+//        for (MapGenBase mapgenbase : this.structureGenerators) {
+//            mapgenbase.generate(world, x, z, chunkprimer);
+//        }
+//
         for (int dx = 0; dx < 16; ++dx) {
             for (int dz = 0; dz < 16; ++dz) {
                 for (int dy = minY; dy < minY + 3; dy++) {
-                    BlockPos pos = new BlockPos(dx,dy,dz);
+                    BlockPos pos = new BlockPos(dx, dy, dz);
                     if (chunkprimer.getBlockState(pos) == Blocks.STONE.defaultBlockState()) {
-                        chunkprimer.setBlockState(pos, Blocks.COBBLESTONE.defaultBlockState(),false);
+                        chunkprimer.setBlockState(pos, Blocks.COBBLESTONE.defaultBlockState(), false);
                     }
                 }
             }
         }
+//
+//        ChunkGenerator chunk = new ChunkAccess(new ChunkPos(x,z),world, chunkprimer, x, z);
+//
+//        biomeSource = world.getBiomeManager().getNoiseBiomeAtPosition(16, x * 16, z * 16);
+//        byte[] biomeIDs = chunk.getBiomeArray();
+//
+//        for (int l = 0; l < biomeIDs.length; ++l) {
+//            biomeIDs[l] = (byte) Biome.getIdForBiome(biomes[l]);
+//        }
+//
+//        chunk.generateSkylightMap();
+//
 
-        ChunkGenerator chunk = new ChunkAccess(new ChunkPos(x,z),world, chunkprimer, x, z);
-
-        biomeSource = world.getBiomeManager().getNoiseBiomeAtPosition(16, x * 16, z * 16);
-        byte[] biomeIDs = chunk.getBiomeArray();
-
-        for (int l = 0; l < biomeIDs.length; ++l) {
-            biomeIDs[l] = (byte) Biome.getIdForBiome(biomes[l]);
-        }
-
-        chunk.generateSkylightMap();
-
- */
     }
 
     @Override
@@ -190,7 +190,7 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
         int z = chunkprimer.getPos().z;
         int minY = settings.floor;
         int maxY = settings.celling;
-        Random random = new Random(  (x >> 2) * 65535 + (z >> 2));
+        Random random = new Random((x >> 2) * 65535 + (z >> 2));
 
         int spire_x = ((x >> 2) * 64) + (8 + random.nextInt(48)) - (x * 16);
         int spire_z = ((z >> 2) * 64) + (8 + random.nextInt(48)) - (z * 16);
@@ -201,19 +201,19 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
             for (int dz = 0; dz < 16; ++dz) {
                 int rs = (spire_x - dx) * (spire_x - dx) + (spire_z - dz) * (spire_z - dz);
 
-                double spire_dist = rs < 256 ? Math.sqrt(rs) : Double.MAX_VALUE;
+                double spire_dist = rs < convertHeight(256) ? Math.sqrt(rs) : Double.MAX_VALUE;
 
                 GenStates curState = GenStates.FLOOR_BEDROCK;
-                for (int dy = 0; dy < 256; dy++) {
+                for (int dy = 0; dy < convertHeight(256); dy++) {
                     BlockState state = curState.state;
 
                     if (curState == GenStates.AIR) {
-                        if (rs < 256) {
+                        if (rs < convertHeight(256)) {
                             int m = Math.min(dy - minY, maxY - dy);
                             double t = spire_dist;
 
-                            if (m < 9) {
-                                t -= Math.sqrt(9 - m);
+                            if (m < convertHeight(9)) {
+                                t -= Math.sqrt(convertHeight(9) - m);
                             }
 
                             if (t <= 4 || t <= 5 && random.nextBoolean()) {
@@ -222,28 +222,28 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
                         }
                     }
 
-                    if (dy >= 253) {
+                    if (dy >= convertHeight(253)) {
                         state = Blocks.BEDROCK.defaultBlockState();
                     }
-                    BlockPos pos = new BlockPos(dx,dy,dz);
-                    chunkprimer.setBlockState(pos, state,true);
+                    BlockPos pos = new BlockPos(dx, dy, dz);
+                    chunkprimer.setBlockState(pos, state, true);
 
                     boolean advance;
                     switch (curState) {
                         case FLOOR_BEDROCK:
-                            advance = dy > 2 || dy > 0 && random.nextBoolean();
+                            advance = dy > convertHeight(2) || dy > convertHeight(0) && random.nextBoolean();
                             break;
                         case GROUND:
-                            advance = dy >= (minY + 2) || dy >= minY && random.nextInt(4) != 0;
+                            advance = dy >= (minY + convertHeight(2)) || dy >= minY && random.nextInt(4) != 0;
                             break;
                         case AIR:
-                            advance = dy >= 90 && (dy >= maxY || random.nextInt(1 + 2 * (maxY - dy) * (maxY - dy)) == 0);
+                            advance = dy >= getSeaLevel() && (dy >= maxY || random.nextInt(1 + 2 * (maxY - dy) * (maxY - dy)) == 0);
                             break;
                         case CEILING:
                             advance = dy >= maxY && random.nextInt(40) == 0;
                             break;
                         case CEILING_STONE:
-                            advance = dy >= 253;
+                            advance = dy >= convertHeight(253);
 
                             break;
                         case CEILING_BEDROCK:
@@ -258,38 +258,38 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
                 }
             }
         }
-/*
-        for (MapGenBase generator : generators) {
-            generator.generate(world, x, z, chunkprimer);
-        }
-
-        for (MapGenBase mapgenbase : this.structureGenerators) {
-            mapgenbase.generate(world, x, z, chunkprimer);
-        }
-
+//
+//        for (MapGenBase generator : generators) {
+//            generator.generate(world, x, z, chunkprimer);
+//        }
+//
+//        for (MapGenBase mapgenbase : this.structureGenerators) {
+//            mapgenbase.generate(world, x, z, chunkprimer);
+//        }
+//
         for (int dx = 0; dx < 16; ++dx) {
             for (int dz = 0; dz < 16; ++dz) {
                 for (int dy = minY; dy < minY + 3; dy++) {
-                    BlockPos pos = new BlockPos(dx,dy,dz);
+                    BlockPos pos = new BlockPos(dx, dy, dz);
                     if (chunkprimer.getBlockState(pos) == Blocks.STONE.defaultBlockState()) {
-                        chunkprimer.setBlockState(pos, Blocks.COBBLESTONE.defaultBlockState(),false);
+                        chunkprimer.setBlockState(pos, Blocks.COBBLESTONE.defaultBlockState(), false);
                     }
                 }
             }
-        }
-
-        ChunkGenerator chunk = new ChunkAccess(new ChunkPos(x,z),world, chunkprimer, x, z);
-
-        biomeSource = world.getBiomeManager().getNoiseBiomeAtPosition(16, x * 16, z * 16);
-        byte[] biomeIDs = chunk.getBiomeArray();
-
-        for (int l = 0; l < biomeIDs.length; ++l) {
-            biomeIDs[l] = (byte) Biome.getIdForBiome(biomes[l]);
-        }
-
-        chunk.generateSkylightMap();
-
- */
+        }//todo fill stone
+//
+//        ChunkGenerator chunk = new ChunkAccess(new ChunkPos(x,z),world, chunkprimer, x, z);
+//
+//        biomeSource = world.getBiomeManager().getNoiseBiomeAtPosition(16, x * 16, z * 16);
+//        byte[] biomeIDs = chunk.getBiomeArray();
+//
+//        for (int l = 0; l < biomeIDs.length; ++l) {
+//            biomeIDs[l] = (byte) Biome.getIdForBiome(biomes[l]);
+//        }
+//
+//        chunk.generateSkylightMap();
+//
+//
         return CompletableFuture.completedFuture(chunkprimer);
     }
 
@@ -314,6 +314,10 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
 
     @Override
     public void applyCarvers(WorldGenRegion region, long seed, RandomState randomState, BiomeManager biomeManager, StructureManager structureManager, ChunkAccess chunkAccess, GenerationStep.Carving carving) {
+    }
+
+    private int convertHeight(int in) {
+        return (int) (getGenDepth() * (in / 256.0) - (settings.seaLevel - settings.floor));
     }
 
 

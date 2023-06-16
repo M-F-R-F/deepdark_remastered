@@ -191,13 +191,13 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
     // Make sure this is correctly implemented so that structures and features can use this
     @Override
     public int getBaseHeight(int x, int z, Heightmap.Types types, LevelHeightAccessor levelHeightAccessor, RandomState randomState) {
-        return settings.seaLevel();
+        return settings.seaLevel;
     }
 
     // Make sure this is correctly implemented so that structures and features can use this
     @Override
     public NoiseColumn getBaseColumn(int x, int z, LevelHeightAccessor levelHeightAccessor, RandomState randomState) {
-        int y = getBaseHeight(x, z, Heightmap.Types.WORLD_SURFACE_WG, levelHeightAccessor, randomState);
+        int y = getGenDepth();
         BlockState stone = Blocks.STONE.defaultBlockState();
         BlockState[] states = new BlockState[y];
         states[0] = Blocks.BEDROCK.defaultBlockState();
@@ -233,12 +233,12 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
 
     @Override
     public int getGenDepth() {
-        return settings.celling() - settings.floor;
+        return settings.celling - settings.floor;
     }
 
     @Override
     public int getSeaLevel() {
-        return 63;
+        return settings.seaLevel;
     }
 
     private record Settings(int seaLevel, int celling, int floor) {

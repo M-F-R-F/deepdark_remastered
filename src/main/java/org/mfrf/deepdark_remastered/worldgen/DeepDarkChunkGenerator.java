@@ -2,10 +2,12 @@ package org.mfrf.deepdark_remastered.worldgen;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.RegistryOps;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.world.level.*;
 import net.minecraft.world.level.biome.Biome;
@@ -176,7 +178,6 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
  */
     }
 
-
     @Override
 
     protected Codec<? extends ChunkGenerator> codec() {
@@ -184,8 +185,112 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
     }
 
     @Override
-    public CompletableFuture<ChunkAccess> fillFromNoise(Executor executor, Blender blender, RandomState randomState, StructureManager structureManager, ChunkAccess chunkAccess) {
-        return CompletableFuture.completedFuture(chunkAccess);
+    public CompletableFuture<ChunkAccess> fillFromNoise(Executor executor, Blender blender, RandomState randomState, StructureManager structureManager, ChunkAccess chunkprimer) {
+        int x = chunkprimer.getPos().x;
+        int z = chunkprimer.getPos().z;
+        int minY = settings.floor;
+        int maxY = settings.celling;
+        Random random = new Random(  (x >> 2) * 65535 + (z >> 2));
+
+        int spire_x = ((x >> 2) * 64) + (8 + random.nextInt(48)) - (x * 16);
+        int spire_z = ((z >> 2) * 64) + (8 + random.nextInt(48)) - (z * 16);
+
+        random.setSeed((long) x * 341873128712L + (long) z * 132897987541L);
+        GenStates[] values = GenStates.values();
+        for (int dx = 0; dx < 16; ++dx) {
+            for (int dz = 0; dz < 16; ++dz) {
+                int rs = (spire_x - dx) * (spire_x - dx) + (spire_z - dz) * (spire_z - dz);
+
+                double spire_dist = rs < 256 ? Math.sqrt(rs) : Double.MAX_VALUE;
+
+                GenStates curState = GenStates.FLOOR_BEDROCK;
+                for (int dy = 0; dy < 256; dy++) {
+                    BlockState state = curState.state;
+
+                    if (curState == GenStates.AIR) {
+                        if (rs < 256) {
+                            int m = Math.min(dy - minY, maxY - dy);
+                            double t = spire_dist;
+
+                            if (m < 9) {
+                                t -= Math.sqrt(9 - m);
+                            }
+
+                            if (t <= 4 || t <= 5 && random.nextBoolean()) {
+                                state = Blocks.COBBLESTONE.defaultBlockState();
+                            }
+                        }
+                    }
+
+                    if (dy >= 253) {
+                        state = Blocks.BEDROCK.defaultBlockState();
+                    }
+                    BlockPos pos = new BlockPos(dx,dy,dz);
+                    chunkprimer.setBlockState(pos, state,true);
+
+                    boolean advance;
+                    switch (curState) {
+                        case FLOOR_BEDROCK:
+                            advance = dy > 2 || dy > 0 && random.nextBoolean();
+                            break;
+                        case GROUND:
+                            advance = dy >= (minY + 2) || dy >= minY && random.nextInt(4) != 0;
+                            break;
+                        case AIR:
+                            advance = dy >= 90 && (dy >= maxY || random.nextInt(1 + 2 * (maxY - dy) * (maxY - dy)) == 0);
+                            break;
+                        case CEILING:
+                            advance = dy >= maxY && random.nextInt(40) == 0;
+                            break;
+                        case CEILING_STONE:
+                            advance = dy >= 253;
+
+                            break;
+                        case CEILING_BEDROCK:
+                            advance = false;
+                            break;
+                        default:
+                            throw new RuntimeException("Invalid State " + curState);
+                    }
+                    if (advance) {
+                        curState = values[curState.ordinal() + 1];
+                    }
+                }
+            }
+        }
+/*
+        for (MapGenBase generator : generators) {
+            generator.generate(world, x, z, chunkprimer);
+        }
+
+        for (MapGenBase mapgenbase : this.structureGenerators) {
+            mapgenbase.generate(world, x, z, chunkprimer);
+        }
+
+        for (int dx = 0; dx < 16; ++dx) {
+            for (int dz = 0; dz < 16; ++dz) {
+                for (int dy = minY; dy < minY + 3; dy++) {
+                    BlockPos pos = new BlockPos(dx,dy,dz);
+                    if (chunkprimer.getBlockState(pos) == Blocks.STONE.defaultBlockState()) {
+                        chunkprimer.setBlockState(pos, Blocks.COBBLESTONE.defaultBlockState(),false);
+                    }
+                }
+            }
+        }
+
+        ChunkGenerator chunk = new ChunkAccess(new ChunkPos(x,z),world, chunkprimer, x, z);
+
+        biomeSource = world.getBiomeManager().getNoiseBiomeAtPosition(16, x * 16, z * 16);
+        byte[] biomeIDs = chunk.getBiomeArray();
+
+        for (int l = 0; l < biomeIDs.length; ++l) {
+            biomeIDs[l] = (byte) Biome.getIdForBiome(biomes[l]);
+        }
+
+        chunk.generateSkylightMap();
+
+ */
+        return CompletableFuture.completedFuture(chunkprimer);
     }
 
     // Make sure this is correctly implemented so that structures and features can use this

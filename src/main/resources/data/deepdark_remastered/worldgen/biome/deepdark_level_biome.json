@@ -1,0 +1,30 @@
+{
+  "precipitation": "none",
+  "temperature": 0,
+  "temperature_modifier": "frozen",
+  "downfall": 0,
+  "effects": {
+    "fog_color": 16777215,
+    "sky_color": 16777215,
+    "water_color": 16777215,
+    "water_fog_color": 16777215,
+    "foliage_color": 16777215,
+    "grass_color": 16777215,
+    "grass_color_modifier": "none",
+    "mood_sound": {
+      "tick_delay": 2000,
+      "offset": 2.0,
+      "sound": "minecraft:ambient.cave"
+    },
+    "music": {
+      "min_delay": 12000,
+      "max_delay": 24000,
+      "replace_current_music": true,
+      "sound": "minecraft:music.nether.basalt_deltas"
+    }
+  },
+  "carvers": {},
+  "spawn_costs": {},
+  "spawners": {},
+  "features": []
+}

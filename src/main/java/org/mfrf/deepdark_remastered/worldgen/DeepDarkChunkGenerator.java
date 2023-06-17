@@ -18,17 +18,12 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.*;
 import net.minecraft.world.level.levelgen.blending.Blender;
 import net.minecraft.world.level.levelgen.structure.StructureSet;
-import net.minecraftforge.common.util.TriPredicate;
-import org.apache.commons.lang3.Range;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.function.BiFunction;
-import java.util.function.BiPredicate;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class DeepDarkChunkGenerator extends ChunkGenerator {
@@ -130,27 +125,6 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
                     BlockPos pos = new BlockPos(dx, dy, dz);
                     chunkprimer.setBlockState(pos, state, true);
 
-//                    boolean advance = switch (curState) {
-////                        case FLOOR_BEDROCK -> dy > getMinY() + 5 || (dy > 3 && random.nextBoolean());
-////                        case GROUND -> Math.abs(dy - seaLevel) < 8 && random.nextInt(1 + (seaLevel - dy) * (seaLevel - dy)) == 0;
-////                        case AIR ->
-////                                dy >= cellingHeight - 16 && random.nextInt(1 + 2 * (cellingHeight - dy) * (cellingHeight - dy)) == 0;
-////                        case CEILING -> dy >= convertHeight(250) && random.nextInt(10) == 0;
-////                        case CEILING_STONE ->
-////                                dy >= settings.topBedrockLayer || (dy > settings.topBedrockLayer - 5 && random.nextBoolean());
-////                        case CEILING_BEDROCK -> false;
-////                        default -> throw new RuntimeException("Invalid State " + curState);
-//
-//                        case CEILING_BEDROCK -> false;
-//                        case CELLING_BASALT -> ;
-//                        case CEILING_STONE -> ;
-//                        case CEILING -> ;
-//                        case AIR -> ;
-//                        case GROUND -> ;
-//                        case GROUND_DEEPSLATE ->
-//                        case FLOOR_BEDROCK -> dy == getMinY() || (dy - getMinY() <= 5 && random.nextBoolean());
-//                        default -> throw new RuntimeException("Invalid State " + curState);
-//                    };
                     if (settings.determineGenStates(curState, dy, random)) {
                         curState = values[curState.ordinal() + 1];
                     }
@@ -247,6 +221,11 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
             return (current - bottomBedrockLayer) / (float) total;
         }
 
+        private int convertBackByPercentWithOutTopOrBottomLayerWithAbs(float percent) {
+            int total = this.topBedrockLayer - this.bottomBedrockLayer;
+            return Math.abs((int) (percent * total + bottomBedrockLayer));
+        }
+
         private boolean determineGenStates(GenStates current, int currentHeight, Random random) {
             float percent = convertHeightByPercentWithOutTopOrBottomLayer(currentHeight);
             boolean b = switch (current) {
@@ -254,13 +233,10 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
                     yield currentHeight - bottomBedrockLayer > 5 || ((currentHeight != bottomBedrockLayer && random.nextBoolean()));
                 }
                 case GROUND_DEEPSLATE -> {
-                    yield current.condition.test(random, percent, () -> 20);
+                    yield current.condition.test(random, percent, () -> 8);
                 }
-                case GROUND, CEILING, CEILING_STONE -> {
-                    yield current.condition.test(random, percent, () -> 1 + (seaLevel - currentHeight) * (seaLevel - currentHeight));
-                }
-                case AIR -> {
-                    yield current.condition.test(random, percent, () -> 1 + 2 * (seaLevel - currentHeight) * (seaLevel - currentHeight));
+                case GROUND, CEILING, CEILING_STONE, AIR, GROUND_COBBLESTONE -> {
+                    yield current.condition.test(random, percent, () -> (int) (1 + convertBackByPercentWithOutTopOrBottomLayerWithAbs(current.condition.range - percent)) / 800);
                 }
                 case CEILING_BASALT -> {
                     yield currentHeight == topBedrockLayer || (topBedrockLayer - currentHeight <= 5 && random.nextBoolean());
@@ -287,12 +263,13 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
     enum GenStates {
         FLOOR_BEDROCK(Blocks.BEDROCK, null),
         GROUND_DEEPSLATE(Blocks.DEEPSLATE, new condition(0.3f, 0.005f)),
-        GROUND(Blocks.STONE, new condition(0.6f, 0.005f)),
-        AIR(Blocks.AIR, new condition(0.68f, 0.008f)),
+        GROUND(Blocks.STONE, new condition(0.59f, 0.002f)),
+        GROUND_COBBLESTONE(Blocks.COBBLESTONE, new condition(0.61f, 0.004f)),
+        AIR(Blocks.AIR, new condition(0.68f, 0.01f)),
         CEILING(Blocks.COBBLESTONE, new condition(0.7f, 0.005f)),
         CEILING_STONE(Blocks.STONE, new condition(0.85f, 0.005f)),
 
-        CEILING_BASALT(Blocks.BASALT, null),
+        CEILING_BASALT(Blocks.DEEPSLATE, null),
         CEILING_BEDROCK(Blocks.BEDROCK, null);
 
         final BlockState state;
@@ -305,7 +282,7 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
 
         record condition(float range, float error) {
             boolean test(Random random, float currentHeight, Supplier<Integer> chance) {
-                return currentHeight > range && ((Math.abs(currentHeight - range) <= error && random.nextInt(chance.get()) == 0));
+                return ((Math.abs(currentHeight - range) < error && random.nextInt(chance.get()) == 0)) || currentHeight > range;
             }
         }
     }

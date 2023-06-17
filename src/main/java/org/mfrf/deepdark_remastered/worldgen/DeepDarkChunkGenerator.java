@@ -1,15 +1,11 @@
 package org.mfrf.deepdark_remastered.worldgen;
 
-import com.google.errorprone.annotations.InlineMe;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
-import net.minecraft.gametest.framework.GameTestRegistry;
 import net.minecraft.resources.RegistryOps;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.world.level.*;
 import net.minecraft.world.level.biome.Biome;
@@ -34,8 +30,8 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
     private static final Codec<Settings> SETTINGS_CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
                     Codec.INT.fieldOf("sea_level").forGetter(Settings::seaLevel),
-                    Codec.INT.fieldOf("celling").forGetter(Settings::celling),
-                    Codec.INT.fieldOf("floor").forGetter(Settings::floor)
+                    Codec.INT.fieldOf("top_bedrock_layer").forGetter(Settings::topBedrockLayer),
+                    Codec.INT.fieldOf("bottom_bedrock_layer").forGetter(Settings::bottomBedrockLayer)
             ).apply(instance, Settings::new));
 
     public static final Codec<DeepDarkChunkGenerator> CODEC = RecordCodecBuilder.create(instance ->
@@ -87,8 +83,8 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
         int x = chunkprimer.getPos().x;
         int z = chunkprimer.getPos().z;
         int seaLevel = settings.seaLevel;
-        int maxY = settings.celling;
-        int cellingHeight = convertHeight(230);
+        int maxY = settings.topBedrockLayer;
+        int cellingHeight = convertHeight(249);
         Random random = new Random((x >> 2) * 65535 + (z >> 2));
 
         int spire_x = ((x >> 2) * 64) + (8 + random.nextInt(48)) - (x * 16);
@@ -121,7 +117,7 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
                         }
                     }
 
-                    if (dy >= convertHeight(253)) {
+                    if (dy >= settings.topBedrockLayer - 2) {
                         state = Blocks.BEDROCK.defaultBlockState();
                     }
                     BlockPos pos = new BlockPos(dx, dy, dz);
@@ -129,13 +125,13 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
 
                     boolean advance = switch (curState) {
                         case FLOOR_BEDROCK ->
-                                dy > getMinY() + convertHeight(2) || dy > convertHeight(0) && random.nextBoolean();
+                                dy > getMinY() + 5 || (dy > 3 && random.nextBoolean());
                         case GROUND ->
                                 dy >= (getSeaLevel() + Math.abs(convertHeight(2))) || (dy - seaLevel < 30 && random.nextInt(4) != 0);
                         case AIR ->
-                                dy >= cellingHeight - 30 && random.nextInt(1 + 2 * (cellingHeight - dy) * (cellingHeight - dy)) == 0;
-                        case CEILING -> dy >= convertHeight(247) && random.nextInt(40) == 0;
-                        case CEILING_STONE -> dy >= convertHeight(255);
+                                dy >= cellingHeight && random.nextInt(1 + 2 * (cellingHeight - dy) * (cellingHeight - dy)) == 0;
+                        case CEILING -> dy >= convertHeight(250) && random.nextInt(10) == 0;
+                        case CEILING_STONE -> dy >= settings.topBedrockLayer || (dy > settings.topBedrockLayer - 5 && random.nextBoolean());
                         case CEILING_BEDROCK -> false;
                         default -> throw new RuntimeException("Invalid State " + curState);
                     };
@@ -224,12 +220,12 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
 
     @Override
     public int getMinY() {
-        return settings.floor;
+        return settings.bottomBedrockLayer;
     }
 
     @Override
     public int getGenDepth() {
-        return settings.celling - settings.floor;
+        return settings.topBedrockLayer - settings.bottomBedrockLayer;
     }
 
     @Override
@@ -241,7 +237,7 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
         return getSeaLevel() - getMinY();
     }
 
-    private record Settings(int seaLevel, int celling, int floor) {
+    private record Settings(int seaLevel, int topBedrockLayer, int bottomBedrockLayer) {
     }
 
     enum GenStates {

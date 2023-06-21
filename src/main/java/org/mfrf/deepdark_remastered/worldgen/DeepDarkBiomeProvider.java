@@ -20,7 +20,7 @@ public class DeepDarkBiomeProvider extends BiomeSource {
     public static final Codec<DeepDarkBiomeProvider> CODEC = RegistryOps.retrieveRegistry(Registry.BIOME_REGISTRY)
             .xmap(DeepDarkBiomeProvider::new, DeepDarkBiomeProvider::getBiomeRegistry).codec();
 
-    private final Holder<Biome> biome;
+    private final Holder<Biome> biome;//todo see NetherBiomes.java, custom biome
     private final Registry<Biome> biomeRegistry;
     private static final List<ResourceKey<Biome>> SPAWN = Collections.singletonList(Biomes.PLAINS);
 
@@ -29,7 +29,6 @@ public class DeepDarkBiomeProvider extends BiomeSource {
         this.biomeRegistry = biomeRegistry;
         biome = biomeRegistry.getHolderOrThrow(DimensionsAndBiomes.DEEPDARK_LEVEL_BIOME);
     }
-
     private static List<Holder<Biome>> getStartBiomes(Registry<Biome> registry) {
         return SPAWN.stream().map(s -> registry.getHolderOrThrow(ResourceKey.create(BuiltinRegistries.BIOME.key(), s.location()))).collect(Collectors.toList());
     }

@@ -87,7 +87,7 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
         int maxY = settings.topBedrockLayer;
 //        int cellingHeight = convertHeightBy256(249);
 
-        Random random = new Random((x >> 2) * 65535 + (z >> 2));
+        Random random = new Random(randomState.legacyLevelSeed()+(x >> 2) * 65535L + (z >> 2));
 
         int spire_x = ((x >> 2) * 64) + (8 + random.nextInt(48)) - (x * 16);
         int spire_z = ((z >> 2) * 64) + (8 + random.nextInt(48)) - (z * 16);

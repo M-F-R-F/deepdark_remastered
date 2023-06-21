@@ -6,6 +6,7 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import org.mfrf.deepdark_remastered.registry.Blocks;
 import org.mfrf.deepdark_remastered.registry.DimensionsAndBiomes;
 import org.slf4j.Logger;
 
@@ -24,6 +25,8 @@ public class Deepdark_remastered {
 
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
+        Blocks.BLOCK.register(modEventBus);
+        Blocks.BLOCK_ENTITIES.register(modEventBus);
 
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);

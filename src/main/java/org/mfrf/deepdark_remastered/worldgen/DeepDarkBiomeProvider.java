@@ -27,8 +27,9 @@ public class DeepDarkBiomeProvider extends BiomeSource {
     public DeepDarkBiomeProvider(Registry<Biome> biomeRegistry) {
         super(getStartBiomes(biomeRegistry));
         this.biomeRegistry = biomeRegistry;
-        biome = biomeRegistry.getHolderOrThrow(DimensionsAndBiomes.DEEPDARK_LEVEL_BIOME);
+        biome = biomeRegistry.getHolderOrThrow(Biomes.DESERT);
     }
+
     private static List<Holder<Biome>> getStartBiomes(Registry<Biome> registry) {
         return SPAWN.stream().map(s -> registry.getHolderOrThrow(ResourceKey.create(BuiltinRegistries.BIOME.key(), s.location()))).collect(Collectors.toList());
     }

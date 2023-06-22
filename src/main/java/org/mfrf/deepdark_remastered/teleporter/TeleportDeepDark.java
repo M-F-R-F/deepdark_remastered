@@ -1,7 +1,6 @@
 package org.mfrf.deepdark_remastered.teleporter;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.Blocks;
@@ -9,6 +8,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.portal.PortalInfo;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.util.ITeleporter;
+import org.mfrf.deepdark_remastered.registry.BlocksAndItems;
 import org.mfrf.deepdark_remastered.registry.DimensionsAndBiomes;
 
 import java.util.Random;
@@ -70,7 +70,7 @@ public class TeleportDeepDark implements ITeleporter {
                     }
 //            Direction a = entityIn.getMotionDirection();
             entityIn.lerpMotion(0, 0, 0);
-            world.setBlock(new BlockPos(x, y - 2, z), org.mfrf.deepdark_remastered.registry.Blocks.deepdarkteleporter.get().defaultBlockState(), 2);
+            world.setBlock(new BlockPos(x, y - 2, z), BlocksAndItems.DEEPDARK_TELEPORTER.get().defaultBlockState(), 2);
             return true;
         }
         return false;

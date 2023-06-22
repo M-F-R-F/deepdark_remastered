@@ -1,12 +1,9 @@
 package org.mfrf.deepdark_remastered.block;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.data.worldgen.DimensionTypes;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
@@ -21,7 +18,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.Material;
-import org.mfrf.deepdark_remastered.registry.Blocks;
+import org.mfrf.deepdark_remastered.registry.BlocksAndItems;
 import org.mfrf.deepdark_remastered.registry.DimensionsAndBiomes;
 import org.mfrf.deepdark_remastered.teleporter.TeleportDeepDark;
 
@@ -61,7 +58,7 @@ public class BlockTeleporter extends BaseEntityBlock {
     @org.jetbrains.annotations.Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level world, BlockState p_153213_, BlockEntityType<T> p_153214_) {
-        return createTickerHelper(p_153214_, Blocks.BE_LOCAL_TELEPORTER.get(), (level, pos, state, tile) -> {
+        return createTickerHelper(p_153214_, BlocksAndItems.BE_LOCAL_TELEPORTER.get(), (level, pos, state, tile) -> {
             Player player = world.getNearestPlayer(pos.getX(), pos.getY(), pos.getZ(), 4, null);
             if (!world.isClientSide && player != null && player.isShiftKeyDown() && player.blockPosition().below().equals(pos)) {
                 float warpX = pos.getX();

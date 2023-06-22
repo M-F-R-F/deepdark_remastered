@@ -21,58 +21,58 @@ public class TeleportDeepDark implements ITeleporter {
     protected float destYaw;
     protected float destPitch;
 
-    public TeleportDeepDark(ServerLevel world){
+    public TeleportDeepDark(ServerLevel world) {
         this.world = world;
         this.random = new Random(world.getSeed());
     }
 
-    public void setDestPos(double x,double y,double z,float yaw,float pitch){
-        destPos = new Vec3(x,y,z);
+    public void setDestPos(double x, double y, double z, float yaw, float pitch) {
+        destPos = new Vec3(x, y, z);
         destYaw = yaw;
         destPitch = pitch;
     }
 
 
-    public Entity placeEntity(Entity entity, ServerLevel currentWorld, ServerLevel destWorld, float yaw, Function<Boolean, Entity> repositionEntity){
+    public Entity placeEntity(Entity entity, ServerLevel currentWorld, ServerLevel destWorld, float yaw, Function<Boolean, Entity> repositionEntity) {
         return repositionEntity.apply(true);
     }
 
-    public PortalInfo getPortalInfo(Entity entity, ServerLevel destWorld, Function<ServerLevel, PortalInfo> defaultPortalInfo)
-    {
+    public PortalInfo getPortalInfo(Entity entity, ServerLevel destWorld, Function<ServerLevel, PortalInfo> defaultPortalInfo) {
         return new PortalInfo(destPos, Vec3.ZERO, destYaw, destPitch);
     }
 
-    public boolean placeInPortal(Entity entity, float yaw)
-    {
+    public boolean placeInPortal(Entity entity, float yaw) {
         this.makePortal(entity);
         return false;
     }
 
-    public boolean makePortal(Entity entityIn)
-    {
+    public boolean makePortal(Entity entityIn) {
         BlockPos blockPos = entityIn.blockPosition();
         double x = (int) Math.floor(blockPos.getX()) + 0.5;
         double z = (int) Math.floor(blockPos.getZ()) + 0.5;
-        entityIn.getLevel().dimensionTypeId().equals(DimensionsAndBiomes.DEEPDARK);
+        if (entityIn.getLevel().dimension().equals(DimensionsAndBiomes.DEEPDARK)) {
 //        entityIn.getLevel().dimensionTypeId().equals(Level.OVERWORLD);
-        int y = 180;
-        for (int dx = -3; dx <= 3; dx++)
-            for (int dz = -3; dz <= 3; dz++)
-                for (int dy = -7; dy <= 4; dy++) {
-                    BlockPos pos = new BlockPos(x + dx, y + dy, z + dz);
-                    if (dx == 0 && dy == -1 && dz == 0) {
-                        BlockState tpb = world.getBlockState(blockPos);
-                        this.world.setBlock(pos, tpb ,2);
-                    } else if (dx == -3 || dx == 3 || (dy + Math.max(Math.abs(dx), Math.abs(dz))) <= -1 || dy == 4 || dz == -3 || dz == 3) {
-                        this.world.setBlock(pos, Blocks.COBBLESTONE.defaultBlockState(),2);
-                    } else if ((dy + Math.max(Math.abs(dx), Math.abs(dz))) == 0 && (dx == 2 || dx == -2 || dz == 2 || dz == -2)) {
-                        this.world.setBlock(pos, Blocks.TORCH.defaultBlockState(),2);
-                    } else {
-                        this.world.setBlock(pos, Blocks.AIR.defaultBlockState(),2);
+            int y = entityIn.getBlockY();
+            for (int dx = -3; dx <= 3; dx++)
+                for (int dz = -3; dz <= 3; dz++)
+                    for (int dy = -7; dy <= 4; dy++) {
+                        BlockPos pos = new BlockPos(x + dx, y + dy, z + dz);
+                        if (dx == 0 && dy == -1 && dz == 0) {
+                            BlockState tpb = world.getBlockState(blockPos);
+                            this.world.setBlock(pos, tpb, 2);
+                        } else if (dx == -3 || dx == 3 || (dy + Math.max(Math.abs(dx), Math.abs(dz))) <= -1 || dy == 4 || dz == -3 || dz == 3) {
+                            this.world.setBlock(pos, Blocks.COBBLESTONE.defaultBlockState(), 2);
+                        } else if ((dy + Math.max(Math.abs(dx), Math.abs(dz))) == 0 && (dx == 2 || dx == -2 || dz == 2 || dz == -2)) {
+                            this.world.setBlock(pos, Blocks.TORCH.defaultBlockState(), 2);
+                        } else {
+                            this.world.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+                        }
                     }
-                }
-        Direction a = entityIn.getMotionDirection();
-        entityIn.lerpMotion(0,0,0);
+//            Direction a = entityIn.getMotionDirection();
+            entityIn.lerpMotion(0, 0, 0);
+            world.setBlock(new BlockPos(x, y - 2, z), org.mfrf.deepdark_remastered.registry.Blocks.deepdarkteleporter.get().defaultBlockState(), 2);
+            return true;
+        }
         return false;
     }
 }

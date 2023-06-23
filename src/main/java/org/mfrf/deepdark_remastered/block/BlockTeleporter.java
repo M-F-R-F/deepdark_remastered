@@ -6,6 +6,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
@@ -82,6 +83,7 @@ public class BlockTeleporter extends BaseEntityBlock {
         tele.setDestPos(x, y, z, destYaw, destPitch);
         player.changeDimension(dim, tele);
         tele.makePortal(player);
+        player.getCooldowns().addCooldown(Items.ENDER_PEARL, 10*20);
         return player;
     }
 

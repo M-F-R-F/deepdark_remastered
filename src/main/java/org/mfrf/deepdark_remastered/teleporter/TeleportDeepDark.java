@@ -53,6 +53,10 @@ public class TeleportDeepDark implements ITeleporter {
         if (entityIn.getLevel().dimension().equals(DimensionsAndBiomes.DEEPDARK)) {
 //        entityIn.getLevel().dimensionTypeId().equals(Level.OVERWORLD);
             int y = entityIn.getBlockY();
+            BlockPos center = new BlockPos(x, y - 2, z);
+            if (world.getBlockState(center).getBlock() == BlocksAndItems.DEEPDARK_TELEPORTER.get()) {
+                return false;
+            }
             for (int dx = -3; dx <= 3; dx++)
                 for (int dz = -3; dz <= 3; dz++)
                     for (int dy = -7; dy <= 4; dy++) {
@@ -70,7 +74,7 @@ public class TeleportDeepDark implements ITeleporter {
                     }
 //            Direction a = entityIn.getMotionDirection();
             entityIn.lerpMotion(0, 0, 0);
-            world.setBlock(new BlockPos(x, y - 2, z), BlocksAndItems.DEEPDARK_TELEPORTER.get().defaultBlockState(), 2);
+            world.setBlock(center, BlocksAndItems.DEEPDARK_TELEPORTER.get().defaultBlockState(), 2);
             return true;
         }
         return false;

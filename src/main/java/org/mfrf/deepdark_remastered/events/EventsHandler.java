@@ -1,5 +1,6 @@
 package org.mfrf.deepdark_remastered.events;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -7,6 +8,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraftforge.event.TickEvent;
@@ -41,12 +43,35 @@ public class EventsHandler {
     public static void playerTick(TickEvent.PlayerTickEvent event) {
         Player player = event.player;
         Level level = player.level;
+        //try to determine if player is survivor mode
         if (isInDeepdark(level)) {
-            if (level.getLightEmission(player.blockPosition()) < 8) {
-                player.hurt(DamageSource.OUT_OF_WORLD, 2 + (player.getMaxHealth() - player.getHealth()));
-                player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 2, 1, true, false));
+            if (!canSurvive(player, level)) {
+                if (level.getGameTime() % 20 == 0) {
+                    boolean onGround = player.isOnGround();
+                    if (onGround) {
+                        player.hurt(DamageSource.DRY_OUT, 2 + (player.getMaxHealth() - player.getHealth()));
+                    } else {
+                        player.hurt(DamageSource.MAGIC, (player.getHealth() - 1) * (player.getMaxHealth() - player.getHealth()) / 2);
+                    }
+                }
+                player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 5, 1, true, false));
             }
         }
+
+    }
+
+    private static boolean canSurvive(Player player, Level level) {
+        if (player.getCooldowns().isOnCooldown(Items.ENDER_PEARL)) return true;
+        BlockPos blockPos = player.blockPosition();
+        int maxLight = 0;
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                for (int k = -1; k <= 1; k++) {
+                    maxLight = Math.max(maxLight, level.getLightEngine().getRawBrightness(blockPos.offset(i, j, k), 0));
+                }
+            }
+        }
+        return maxLight >= 6;
     }
 
     private static boolean isInDeepdark(Level level) {

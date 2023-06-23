@@ -7,6 +7,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.level.WorldGenRegion;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.*;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
@@ -87,7 +88,7 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
         int maxY = settings.topBedrockLayer;
 //        int cellingHeight = convertHeightBy256(249);
 
-        Random random = new Random(randomState.legacyLevelSeed()+(x >> 2) * 65535L + (z >> 2));
+        Random random = new Random(randomState.legacyLevelSeed() + (x >> 2) * 65535L + (z >> 2));
 
         int spire_x = ((x >> 2) * 64) + (8 + random.nextInt(48)) - (x * 16);
         int spire_z = ((z >> 2) * 64) + (8 + random.nextInt(48)) - (z * 16);
@@ -140,16 +141,19 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
 //            mapgenbase.generate(world, x, z, chunkprimer);
 //        }
 //
-//        for (int dx = 0; dx < 16; ++dx) {
-//            for (int dz = 0; dz < 16; ++dz) {
-//                for (int dy = getSeaLevel() - 16; dy < seaLevel + 16; dy++) {
-//                    BlockPos pos = new BlockPos(dx, dy, dz);
-//                    if (chunkprimer.getBlockState(pos) == Blocks.STONE.defaultBlockState()) {
-//                        chunkprimer.setBlockState(pos, Blocks.COBBLESTONE.defaultBlockState(), false);
-//                    }
-//                }
-//            }
-//        }//todo fill stone
+        int l = settings.convertBackByPercentWithOutTopOrBottomLayerWithAbs(GenStates.GROUND.condition.range) + 4;
+        for (int dx = 0; dx < 16; ++dx) {
+            outer:
+            for (int dz = 0; dz < 16; ++dz) {
+                for (int dy = l; dy > l - 16; dy--) {
+                    BlockPos pos = new BlockPos(dx, dy, dz);
+                    if (chunkprimer.getBlockState(pos).is(BlockTags.BASE_STONE_OVERWORLD) && random.nextBoolean()) {
+                        chunkprimer.setBlockState(pos.above(), Blocks.COBBLESTONE.defaultBlockState(), false);
+                        continue outer;
+                    }
+                }
+            }
+        }//todo fill stone
 
         return CompletableFuture.completedFuture(chunkprimer);
     }
@@ -235,8 +239,10 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
                 case GROUND_DEEPSLATE -> {
                     yield current.condition.test(random, percent, () -> 8);
                 }
-                case GROUND, CEILING, CEILING_STONE, AIR, GROUND_COBBLESTONE -> {
-                    yield current.condition.test(random, percent, () -> (int) (1 + convertBackByPercentWithOutTopOrBottomLayerWithAbs(current.condition.range - percent)) / 80);
+                case GROUND, CEILING, CEILING_STONE, AIR
+//                        , GROUND_COBBLESTONE
+                        -> {
+                    yield current.condition.test(random, percent, () -> (int) (1 + convertBackByPercentWithOutTopOrBottomLayerWithAbs(current.condition.range - percent)) / 16);
                 }
                 case CEILING_BASALT -> {
                     yield currentHeight == topBedrockLayer || (topBedrockLayer - currentHeight <= 5 && random.nextBoolean());
@@ -263,9 +269,9 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
     enum GenStates {
         FLOOR_BEDROCK(Blocks.BEDROCK, null),
         GROUND_DEEPSLATE(Blocks.DEEPSLATE, new condition(0.3f, 0.005f)),
-        GROUND(Blocks.STONE, new condition(0.59f, 0.01f)),
-        GROUND_COBBLESTONE(Blocks.COBBLESTONE, new condition(0.61f, 0.004f)),
-        AIR(Blocks.AIR, new condition(0.68f, 0.01f)),
+        GROUND(Blocks.STONE, new condition(0.59f, 0.0001f)),
+//        GROUND_COBBLESTONE(Blocks.COBBLESTONE, new condition(0.6f, 0.001f)),
+        AIR(Blocks.AIR, new condition(0.68f, 0.03f)),
         CEILING(Blocks.COBBLESTONE, new condition(0.7f, 0.005f)),
         CEILING_STONE(Blocks.STONE, new condition(0.85f, 0.005f)),
 

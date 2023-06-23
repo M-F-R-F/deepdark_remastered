@@ -4,20 +4,26 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.QuartPos;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.*;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeGenerationSettings;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.CarvingMask;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.levelgen.*;
 import net.minecraft.world.level.levelgen.blending.Blender;
+import net.minecraft.world.level.levelgen.carver.CarvingContext;
+import net.minecraft.world.level.levelgen.carver.ConfiguredWorldCarver;
 import net.minecraft.world.level.levelgen.structure.StructureSet;
 
 import java.util.List;
@@ -179,6 +185,41 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
 
     @Override
     public void applyCarvers(WorldGenRegion region, long seed, RandomState randomState, BiomeManager biomeManager, StructureManager structureManager, ChunkAccess chunkAccess, GenerationStep.Carving carving) {
+        BiomeManager biomemanager = biomeManager.withDifferentSource((p_224281_, p_224282_, p_224283_) -> {
+            return this.biomeSource.getNoiseBiome(p_224281_, p_224282_, p_224283_, randomState.sampler());
+        });
+        WorldgenRandom worldgenrandom = new WorldgenRandom(new LegacyRandomSource(RandomSupport.generateUniqueSeed()));
+        int i = 8;
+        ChunkPos chunkpos = chunkAccess.getPos();
+        NoiseChunk noisechunk = chunkAccess.getOrCreateNoiseChunk((p_224250_) -> {
+            return this.biomeSource.createNoiseChunk(p_224250_, p_224228_, Blender.of(p_224224_), randomState);
+        });
+        Aquifer aquifer = noisechunk.aquifer();
+        CarvingContext carvingcontext = new CarvingContext(this, p_224224_.registryAccess(), chunkAccess.getHeightAccessorForGeneration(), noisechunk, randomState, this.settings.value().surfaceRule());
+        CarvingMask carvingmask = ((ProtoChunk)chunkAccess).getOrCreateCarvingMask(p_224230_);
+
+        for(int j = -8; j <= 8; ++j) {
+            for(int k = -8; k <= 8; ++k) {
+                ChunkPos chunkpos1 = new ChunkPos(chunkpos.x + j, chunkpos.z + k);
+                ChunkAccess chunkaccess = p_224224_.getChunk(chunkpos1.x, chunkpos1.z);
+                BiomeGenerationSettings biomegenerationsettings = chunkaccess.carverBiome(() -> {
+                    return this.getBiomeGenerationSettings(this.biomeSource.getNoiseBiome(QuartPos.fromBlock(chunkpos1.getMinBlockX()), 0, QuartPos.fromBlock(chunkpos1.getMinBlockZ()), randomState.sampler()));
+                });
+                Iterable<Holder<ConfiguredWorldCarver<?>>> iterable = biomegenerationsettings.getCarvers(p_224230_);
+                int l = 0;
+
+                for(Holder<ConfiguredWorldCarver<?>> holder : iterable) {
+                    ConfiguredWorldCarver<?> configuredworldcarver = holder.value();
+                    worldgenrandom.setLargeFeatureSeed(p_224225_ + (long)l, chunkpos1.x, chunkpos1.z);
+                    if (configuredworldcarver.isStartChunk(worldgenrandom)) {
+                        configuredworldcarver.carve(carvingcontext, chunkAccess, biomemanager::getBiome, worldgenrandom, aquifer, chunkpos1, carvingmask);
+                    }
+
+                    ++l;
+                }
+            }
+        }
+
     }
 
     private int convertHeightBy256(int in) {
@@ -271,9 +312,9 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
         GROUND_DEEPSLATE(Blocks.DEEPSLATE, new condition(0.3f, 0.005f)),
         GROUND(Blocks.STONE, new condition(0.59f, 0.0001f)),
 //        GROUND_COBBLESTONE(Blocks.COBBLESTONE, new condition(0.6f, 0.001f)),
-        AIR(Blocks.AIR, new condition(0.68f, 0.03f)),
-        CEILING(Blocks.COBBLESTONE, new condition(0.7f, 0.005f)),
-        CEILING_STONE(Blocks.STONE, new condition(0.85f, 0.005f)),
+        AIR(Blocks.AIR, new condition(0.78f, 0.1f)),
+        CEILING(Blocks.COBBLESTONE, new condition(0.8f, 0.005f)),
+        CEILING_STONE(Blocks.STONE, new condition(0.95f, 0.005f)),
 
         CEILING_BASALT(Blocks.DEEPSLATE, null),
         CEILING_BEDROCK(Blocks.BEDROCK, null);

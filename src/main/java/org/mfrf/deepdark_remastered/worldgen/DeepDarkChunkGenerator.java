@@ -140,16 +140,16 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
 //            mapgenbase.generate(world, x, z, chunkprimer);
 //        }
 //
-        for (int dx = 0; dx < 16; ++dx) {
-            for (int dz = 0; dz < 16; ++dz) {
-                for (int dy = getSeaLevel() - 16; dy < seaLevel + 16; dy++) {
-                    BlockPos pos = new BlockPos(dx, dy, dz);
-                    if (chunkprimer.getBlockState(pos) == Blocks.STONE.defaultBlockState()) {
-                        chunkprimer.setBlockState(pos, Blocks.COBBLESTONE.defaultBlockState(), false);
-                    }
-                }
-            }
-        }//todo fill stone
+//        for (int dx = 0; dx < 16; ++dx) {
+//            for (int dz = 0; dz < 16; ++dz) {
+//                for (int dy = getSeaLevel() - 16; dy < seaLevel + 16; dy++) {
+//                    BlockPos pos = new BlockPos(dx, dy, dz);
+//                    if (chunkprimer.getBlockState(pos) == Blocks.STONE.defaultBlockState()) {
+//                        chunkprimer.setBlockState(pos, Blocks.COBBLESTONE.defaultBlockState(), false);
+//                    }
+//                }
+//            }
+//        }//todo fill stone
 
         return CompletableFuture.completedFuture(chunkprimer);
     }
@@ -236,7 +236,7 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
                     yield current.condition.test(random, percent, () -> 8);
                 }
                 case GROUND, CEILING, CEILING_STONE, AIR, GROUND_COBBLESTONE -> {
-                    yield current.condition.test(random, percent, () -> (int) (1 + convertBackByPercentWithOutTopOrBottomLayerWithAbs(current.condition.range - percent)) / 800);
+                    yield current.condition.test(random, percent, () -> (int) (1 + convertBackByPercentWithOutTopOrBottomLayerWithAbs(current.condition.range - percent)) / 80);
                 }
                 case CEILING_BASALT -> {
                     yield currentHeight == topBedrockLayer || (topBedrockLayer - currentHeight <= 5 && random.nextBoolean());
@@ -263,7 +263,7 @@ public class DeepDarkChunkGenerator extends ChunkGenerator {
     enum GenStates {
         FLOOR_BEDROCK(Blocks.BEDROCK, null),
         GROUND_DEEPSLATE(Blocks.DEEPSLATE, new condition(0.3f, 0.005f)),
-        GROUND(Blocks.STONE, new condition(0.59f, 0.002f)),
+        GROUND(Blocks.STONE, new condition(0.59f, 0.01f)),
         GROUND_COBBLESTONE(Blocks.COBBLESTONE, new condition(0.61f, 0.004f)),
         AIR(Blocks.AIR, new condition(0.68f, 0.01f)),
         CEILING(Blocks.COBBLESTONE, new condition(0.7f, 0.005f)),

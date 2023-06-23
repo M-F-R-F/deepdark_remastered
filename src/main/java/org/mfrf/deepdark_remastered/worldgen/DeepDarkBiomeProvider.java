@@ -22,12 +22,12 @@ public class DeepDarkBiomeProvider extends BiomeSource {
 
     private final Holder<Biome> biome;//todo see NetherBiomes.java, custom biome
     private final Registry<Biome> biomeRegistry;
-    private static final List<ResourceKey<Biome>> SPAWN = Collections.singletonList(Biomes.PLAINS);
+    private static final List<ResourceKey<Biome>> SPAWN = Collections.singletonList(Biomes.WINDSWEPT_GRAVELLY_HILLS);
 
     public DeepDarkBiomeProvider(Registry<Biome> biomeRegistry) {
         super(getStartBiomes(biomeRegistry));
         this.biomeRegistry = biomeRegistry;
-        biome = biomeRegistry.getHolderOrThrow(Biomes.DESERT);
+        biome = biomeRegistry.getHolderOrThrow(Biomes.WINDSWEPT_GRAVELLY_HILLS);
     }
 
     private static List<Holder<Biome>> getStartBiomes(Registry<Biome> registry) {

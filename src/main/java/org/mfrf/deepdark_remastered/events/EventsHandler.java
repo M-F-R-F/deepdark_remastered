@@ -61,7 +61,8 @@ public class EventsHandler {
     }
 
     private static boolean canSurvive(Player player, Level level) {
-        if (player.getCooldowns().isOnCooldown(Items.ENDER_PEARL)) return true;
+        if (player.getCooldowns().isOnCooldown(Items.ENDER_PEARL) || (player.getAbilities().flying && player.getAbilities().instabuild))
+            return true;
         BlockPos blockPos = player.blockPosition();
         int maxLight = 0;
         for (int i = -1; i <= 1; i++) {

@@ -4,8 +4,8 @@
     "type": "deepdark_remastered:deepdark_chunkgen",
     "settings": {
       "sea_level": 0,
-      "top_bedrock_layer": 2000,
-      "bottom_bedrock_layer": -2000
+      "top_bedrock_layer": 256,
+      "bottom_bedrock_layer": -256
     }
   }
 }

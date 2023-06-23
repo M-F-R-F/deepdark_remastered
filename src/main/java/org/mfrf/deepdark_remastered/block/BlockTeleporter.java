@@ -68,7 +68,7 @@ public class BlockTeleporter extends BaseEntityBlock {
                 float warpY;
                 if (world.dimension().equals(Level.OVERWORLD)) {
                     dest = world.getServer().getLevel(DimensionsAndBiomes.DEEPDARK);
-                    warpY = 800;
+                    warpY = 100;
                 } else {
                     dest = world.getServer().getLevel(Level.OVERWORLD);
                     warpY = dest.getHeight(Heightmap.Types.MOTION_BLOCKING, (int) warpX, (int) warpZ);

@@ -49,9 +49,9 @@ public class EventsHandler {
                 if (level.getGameTime() % 20 == 0) {
                     boolean onGround = player.isOnGround();
                     if (onGround) {
-                        player.hurt(DamageSource.DRY_OUT, 2 + (player.getMaxHealth() - player.getHealth()));
+                        player.hurt(DamageSource.OUT_OF_WORLD, 2 + (player.getMaxHealth() - player.getHealth()));
                     } else {
-                        player.hurt(DamageSource.MAGIC, (player.getHealth() - 1) * (player.getMaxHealth() - player.getHealth()) / 2);
+                        player.hurt(DamageSource.OUT_OF_WORLD, (player.getHealth() - 1) * (player.getMaxHealth() - player.getHealth()) / 2);
                     }
                 }
                 player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 5, 1, true, false));
